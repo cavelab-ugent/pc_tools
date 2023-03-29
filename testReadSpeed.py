@@ -2,7 +2,7 @@ import open3d as o3d
 import time
 import argparse
 import os
-from plyfile import PlyData, PlyElement
+from plyfile import PlyData
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-p", "--pointcloud", type=str, required=True)
