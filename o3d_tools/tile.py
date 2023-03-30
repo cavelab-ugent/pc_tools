@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 
 import open3d as o3d
 
+# TODO: tile by side length
+
 def tileo3d(pc: Union[str, o3d.geometry.PointCloud, o3d.t.geometry.PointCloud], n_tiles: int, buffer: int = None, visualization: bool = False):
     """
     Tiles pointcloud (on x,y) into n_tiles
@@ -24,7 +26,6 @@ def tileo3d(pc: Union[str, o3d.geometry.PointCloud, o3d.t.geometry.PointCloud], 
         Visualization of tiles
     """
 
-    # TODO: include buffer
     # TODO: detect longest side and use this one as current y
 
     # check type
