@@ -6,9 +6,13 @@ import numpy as np
 import open3d as o3d
 import pptk
 
+
 def visualizepptk(pc: Union[str, o3d.geometry.PointCloud, o3d.t.geometry.PointCloud]):
     """
     Visualizes pointcloud using pptk
+
+    Note: pptk requires python 3.7 or lower, viewer doesn't work in WSL/Ubuntu
+
     Parameters
     ----------
     pc
@@ -29,6 +33,8 @@ def visualizepptk(pc: Union[str, o3d.geometry.PointCloud, o3d.t.geometry.PointCl
     # Visualize point cloud
     v = pptk.viewer(points)
     return
+
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
