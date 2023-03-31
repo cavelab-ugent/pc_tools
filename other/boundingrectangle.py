@@ -87,7 +87,7 @@ def boundingrectangleo3d(points, visualisation: bool = False, out_dir = None):
 
     return bbox, projected_corners
 
-def boundingrectangle(points, buffer: int = 0, visualisation: bool = False, out_dir = None):
+def boundingrectangle(points, buffer: int = None, visualisation: bool = False, out_dir = None):
     """
     Calculates smallest bounding rectangle aroung set of 2D points
 
@@ -102,6 +102,10 @@ def boundingrectangle(points, buffer: int = 0, visualisation: bool = False, out_
     (optional) out_dir
         location to save figure if provided
     """
+
+    points = np.asarray(points)
+    if buffer is None:
+        buffer = 0
     
     hull = ConvexHull(points) # scipy fast convex hull
 
