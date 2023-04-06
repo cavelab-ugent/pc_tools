@@ -60,24 +60,15 @@ def boundingrectangleo3d(points, visualisation: bool = False, out_dir = None):
         plt.figure()
         plt.axis('equal')
 
-        edge_points = bbox.get_box_points()
-        # project bbox to 
-        ep_np = edge_points.numpy()
-
-        max_idxs = np.argmax(ep_np, axis=0)
-        min_idxs = np.argmin(ep_np, axis=0)
-
-        edge_points = ep_np[np.concatenate((max_idxs[:2], min_idxs[:2]), axis=0)]
-
         for point in points:
             plt.plot(point[0], point[1], 'bo')
-        for point in edge_points:
+        for point in projected_corners:
             plt.plot(point[0], point[1], 'ro')
         # create edges:
-        for i in range(len(edge_points)-1):
-            plt.plot([edge_points[i][0], edge_points[i+1][0]], [edge_points[i][1], edge_points[i+1][1]], 'r-')
+        for i in range(len(projected_corners)-1):
+            plt.plot([projected_corners[i][0], projected_corners[i+1][0]], [projected_corners[i][1], projected_corners[i+1][1]], 'r-')
         # final line
-        plt.plot([edge_points[-1][0], edge_points[0][0]], [edge_points[-1][1], edge_points[0][1]], 'r-')
+        plt.plot([projected_corners[-1][0], projected_corners[0][0]], [projected_corners[-1][1], projected_corners[0][1]], 'r-')
         if not os.path.exists(out_dir):
             print("Cant find location {out_dir} to save Plotbounds")
         else:
