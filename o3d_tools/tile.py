@@ -181,14 +181,14 @@ def create_tiles_aligned_corners(corner_points, size, buffer, exact):
         # use size where we get exact same rectangles for each tile
         # recalculate size of tiles in each direction
         n_tiles = (lengths - buffer) / ( size - buffer )
+        print(n_tiles)
         # can't divide into 0 tiles
         n_tiles = np.where(n_tiles == 0, 1, n_tiles)
         sizes = (lengths - buffer) / np.round(n_tiles) + buffer
         print(f"Actual sizes used: x: {sizes[0]}, y: {sizes[1]}")
-        tiles_xy = np.divide(lengths, sizes)
         # bottom left corners
-        x_crnrs = [(min[0] + i*(sizes[0]-buffer)) for i in range(int(tiles_xy[0]))]
-        y_crnrs = [(min[1] + i*(sizes[1]-buffer)) for i in range(int(tiles_xy[1]))]
+        x_crnrs = [(min[0] + i*(sizes[0]-buffer)) for i in range(int(np.round(n_tiles[0])))]
+        y_crnrs = [(min[1] + i*(sizes[1]-buffer)) for i in range(int(np.round(n_tiles[1])))]
         for i in range(len(x_crnrs)):
             for j in range(len(y_crnrs)):
                 tiles.append([[x_crnrs[i],y_crnrs[j]], [x_crnrs[i],y_crnrs[j] + sizes[1]],[x_crnrs[i] + sizes[0],y_crnrs[j]],[x_crnrs[i] + sizes[0],y_crnrs[j] + sizes[1]]])
@@ -218,9 +218,9 @@ def visualize_rectangles(rectangles, visualization:bool = False, out_dir: str = 
         plt.annotate("T" + str(j), xy= ((max_x + min_x)/2, (max_y + min_y)/2))
     if out_dir:
         if not os.path.exists(out_dir):
-                print("Cant find location {out_dir} to save Plotbounds")
+                print("Cant find location {out_dir} to save Tiles")
         else:
-            plt.savefig(os.path.join(out_dir,"PlotBounds.png"))
+            plt.savefig(os.path.join(out_dir,"Tiles.png"))
     if visualization:
         plt.show()
 
@@ -274,8 +274,8 @@ def visualize_bounds(rotated_bboxs):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--pointcloud", type=str, required=True)
-    parser.add_argument("-s", "--size", type=int, required=True)
-    parser.add_argument("-b", "--buffer", type=int)
+    parser.add_argument("-s", "--size", type=int, default=20)
+    parser.add_argument("-b", "--buffer", type=int, default=2)
 
     args = parser.parse_args()
 
@@ -285,135 +285,9 @@ if __name__ == "__main__":
     
     tiled_pcs = tile_o3d_xy(args.pointcloud, size=args.size, buffer=args.buffer, exact_size=False, visualization=True)
 
-    out_dir = "tiled/"
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
-    for i, pc in enumerate(tiled_pcs):
-        o3d.io.write_point_cloud(out_dir+"Tile"+str(i)+".ply", pc)
-
-
-
-
-# FOLLOWING: old o3d tiling, doesn't work
-
-
-# def tileo3dsquare(pc: Union[str, o3d.geometry.PointCloud, o3d.t.geometry.PointCloud], size: int, buffer: int = None, out_dir: str = None, exact_size: bool = False, visualization: bool = False):
-#     """
-#     Tiles pointcloud (on x,y) into tiles of given size
-#     The bool exact_size indicates wether exact given size is used: 
-#         if True exact squares will be made and any left over parts will be smaller tiles.
-#         if False the closest length to divide each side into exact squares will be used.
-#     Parameters
-#     ----------
-#     pc
-#         May be string with path to pointcloud, or o3d.(t) PointCloud object
-#     size
-#         Size of one side of tile in metres 
-#     (optional) buffer
-#         Buffer in meters to add to each tile border
-#     (optional) exact_size
-#         Wether to use exact given tile size
-#     (optional) visualization
-#         Visualization of tiles
-#     """
-
-#     # check type
-#     if isinstance(pc, str):
-#         if not os.path.exists(pc):
-#             print(f"Can't find file at location {pc}")
-#             return
-#         pcd = o3d.io.read_point_cloud(pc)
-#     elif isinstance(pc, o3d.geometry.PointCloud) or isinstance(pc, o3d.t.geometry.PointCloud):
-#         pcd = pc
-#     else:
-#         print(f"Can't read pointcloud {pc}")
-#         return
-    
-#     if size < 1:
-#         print("size < 1")
-#         return
-    
-    
-#     oriented_bbox = pcd.get_oriented_bounding_box()
-#     tiles = tile_o3dbbox(oriented_bbox, size, buffer, exact_size, visualization)
-
-#     for i, tile in enumerate(tiles):
-#         cropped = pcd.crop(tile)
-        
-#         # write output
-#         if not out_dir:
-#             out_dir = "tiled/"
-#         if not os.path.exists(out_dir):
-#             os.makedirs(out_dir)
-#         o3d.io.write_point_cloud(out_dir+"Tile"+str(i)+".ply", cropped)
-
-# def tile_o3dbbox(bbox: Union[o3d.geometry.OrientedBoundingBox, o3d.t.geometry.OrientedBoundingBox], size: int, buffer: int = None, exact_size: bool = False, visualization: bool = False):
-#     """
-#     Tiles given bbox into tiles of given size.
-#     The bool exact_size indicates wether exact given size is used: 
-#         if True exact squares will be made and any left over parts will be smaller tiles.
-#         if False the closest length to divide each side into exact squares will be used.
-#     Parameters
-#     ----------
-#     bbox
-#         o3d.(t).geometry.OrientedBoundingBox
-#     size
-#         Size of one side of tile in metres 
-#     (optional) buffer
-#         Buffer in meters to add to each tile border
-#     (optional) exact_size
-#         Wether to use exact given tile size
-#     (optional) visualization
-#         Visualization of tiles
-#     """
-
-#     if isinstance(bbox, o3d.geometry.OrientedBoundingBox):
-#         rot = np.copy(bbox.R)
-#         rotation_center = np.copy(bbox.get_center())
-#         aligned_bbox = bbox.rotate(rot.T)
-#         Z_extent = aligned_bbox.extent[2]
-#         aligned_center = aligned_bbox.get_center()
-#         aligned_Z_max = aligned_center[2] + Z_extent/8
-#         aligned_Z_min = aligned_center[2] - Z_extent/8
-#     elif isinstance(bbox, o3d.t.geometry.OrientedBoundingBox):
-#         rot = np.copy(bbox.rotation)
-#         rotation_center = np.copy(bbox.GetCenter().numpy())
-#         aligned_bbox = bbox.rotate(bbox.R.T())
-#         Z_extent = aligned_bbox.extent
-#     else:
-#         print(f"Can't read bbox {bbox}")
-#         return
-
-#     # get corner points of rectangles
-#     edges = aligned_bbox.get_box_points()
-#     if isinstance(aligned_bbox, o3d.t.geometry.OrientedBoundingBox):
-#         edges = edges.numpy()
-#     elif isinstance(aligned_bbox, o3d.geometry.OrientedBoundingBox):
-#         edges = np.asarray(edges)
-
-#     tile_bboxs = create_tiles_aligned_corners(edges, size, buffer, exact_size)
-
-#     rotated_bboxs = []
-
-#     # for each tile: create o3d bbox and rotate back
-#     for aligned_tile in tile_bboxs:
-#         # first create 03d pointcloud, then get bounding box from this pointcloud
-#         # no direct way of getting bbox in current o3d
-#         top_corners = np.hstack((aligned_tile, np.asarray([[aligned_Z_max]]*4)))
-#         bot_corners = np.hstack((aligned_tile, np.asarray([[aligned_Z_min]]*4)))
-
-#         if isinstance(bbox, o3d.t.geometry.OrientedBoundingBox):
-#             corners_pc = o3d.t.geometry.PointCloud(o3d.core.Tensor(np.vstack((top_corners, bot_corners))))
-#         elif isinstance(bbox, o3d.geometry.OrientedBoundingBox):
-#             corners_pc = o3d.geometry.PointCloud(o3d.utility.Vector3dVector(np.vstack((top_corners, bot_corners))))
-#         crop_bbox = corners_pc.get_oriented_bounding_box()
-
-
-#         # rotate bbox back with big bbox center as rotation center
-#         rotated = crop_bbox.rotate(rot, center=rotation_center)
-#         rotated_bboxs.append(rotated)
-
-#     if visualization:
-#         visualize_bounds(rotated_bboxs)
-#     return rotated_bboxs
+    # out_dir = "tiled/"
+    # if not os.path.exists(out_dir):
+    #     os.makedirs(out_dir)
+    # for i, pc in enumerate(tiled_pcs):
+    #     o3d.io.write_point_cloud(out_dir+"Tile"+str(i)+".ply", pc)
 
